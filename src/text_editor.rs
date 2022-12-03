@@ -58,7 +58,10 @@ impl TextEditor {
     pub fn handle_key(&mut self, event: KeyEvent) {
         match event.code {
             KeyCode::Char('s') if event.modifiers.contains(KeyModifiers::CONTROL) => self.save(),
-            KeyCode::Esc => self.alive = false,
+            KeyCode::Esc if self.saved => self.alive = false,
+            KeyCode::Char('q') if event.modifiers.contains(KeyModifiers::CONTROL) => {
+                self.alive = false
+            }
             KeyCode::Up => self.move_cursor(Direction::Up),
             KeyCode::Right => self.move_cursor(Direction::Right),
             KeyCode::Down => self.move_cursor(Direction::Down),
