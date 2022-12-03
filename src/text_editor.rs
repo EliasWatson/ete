@@ -8,7 +8,8 @@ use crossterm::{
     cursor,
     event::{KeyCode, KeyEvent, KeyModifiers},
     execute,
-    style::Print,
+    style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
+    terminal::{self, Clear},
 };
 
 #[derive(Debug)]
@@ -79,7 +80,32 @@ impl TextEditor {
             execute!(out, cursor::MoveTo(0, row), Print(line))?;
         }
 
-        execute!(out, cursor::Show)?;
+        self.render_toolbar(out)?;
+
+        execute!(out, cursor::Show, ResetColor)?;
+        Ok(())
+    }
+
+    fn render_toolbar(&self, out: &mut Stdout) -> Result<(), std::io::Error> {
+        let (width, height) = terminal::size()?;
+
+        let saved_text = if self.saved { "" } else { "Not Saved!" };
+
+        let position_text = format!("{}, {}", self.cursor_col, self.cursor_row);
+        let position_text_col = width - 1 - position_text.len() as u16;
+
+        execute!(
+            out,
+            cursor::MoveTo(0, height - 1),
+            SetBackgroundColor(Color::White),
+            SetForegroundColor(Color::Black),
+            Clear(terminal::ClearType::CurrentLine),
+            cursor::MoveTo(1, height - 1),
+            Print(saved_text),
+            cursor::MoveTo(position_text_col, height - 1),
+            Print(position_text)
+        )?;
+
         Ok(())
     }
 
