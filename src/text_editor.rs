@@ -148,6 +148,9 @@ impl TextEditor {
 
         let saved_text = if self.saved { "" } else { "Not Saved!" };
 
+        let path_text = self.path.to_string_lossy().to_string();
+        let path_text_col = ((width as usize / 2) - (path_text.len() / 2)) as u16;
+
         let position_text = format!("{}, {}", self.cursor_col, self.cursor_row);
         let position_text_col = width - 1 - position_text.len() as u16;
 
@@ -159,6 +162,8 @@ impl TextEditor {
             Clear(terminal::ClearType::CurrentLine),
             cursor::MoveTo(1, height - 1),
             Print(saved_text),
+            cursor::MoveTo(path_text_col, height - 1),
+            Print(path_text),
             cursor::MoveTo(position_text_col, height - 1),
             Print(position_text)
         )?;
