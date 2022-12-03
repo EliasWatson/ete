@@ -80,6 +80,17 @@ impl TextEditor {
             KeyCode::Home => self.move_cursor(Direction::Front),
             KeyCode::End => self.move_cursor(Direction::Back),
 
+            // Basic Emacs keys
+            KeyCode::Char('a') if event.modifiers.contains(KeyModifiers::CONTROL) => {
+                self.move_cursor(Direction::Front)
+            }
+            KeyCode::Char('e') if event.modifiers.contains(KeyModifiers::CONTROL) => {
+                self.move_cursor(Direction::Back)
+            }
+            KeyCode::Char('u') if event.modifiers.contains(KeyModifiers::CONTROL) => {
+                self.clear_line()
+            }
+
             // New line
             KeyCode::Enter => self.insert_new_line(),
 
@@ -180,6 +191,11 @@ impl TextEditor {
         self.cursor_col = 0;
 
         self.saved = false;
+    }
+
+    fn clear_line(&mut self) {
+        self.lines[self.cursor_row].clear();
+        self.cursor_col = 0;
     }
 
     fn insert_char(&mut self, c: char) {
