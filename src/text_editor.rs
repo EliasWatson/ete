@@ -1,6 +1,6 @@
 use std::{
-    fs,
-    io::{stdout, Stdout},
+    fs::{self, File},
+    io::{Stdout, Write},
     path::PathBuf,
 };
 
@@ -15,7 +15,7 @@ use crossterm::{
 #[derive(Debug)]
 pub struct TextEditor {
     pub alive: bool,
-    pub path: Option<PathBuf>,
+    pub path: PathBuf,
     pub saved: bool,
     pub lines: Vec<String>,
     pub cursor_row: usize,
@@ -31,29 +31,28 @@ pub enum Direction {
 }
 
 impl TextEditor {
-    pub fn new() -> Self {
-        Self {
-            alive: true,
-            path: None,
-            saved: true,
-            lines: vec![String::new()],
-            cursor_row: 0,
-            cursor_col: 0,
-        }
-    }
-
     pub fn open_file(path: PathBuf) -> Result<Self, std::io::Error> {
-        let file_contents = fs::read_to_string(path.clone())?;
-        let lines: Vec<String> = file_contents.lines().map(String::from).collect();
+        if path.exists() {
+            let file_contents = fs::read_to_string(path.clone())?;
 
-        Ok(Self {
-            alive: true,
-            path: Some(path),
-            saved: true,
-            lines,
-            cursor_row: 0,
-            cursor_col: 0,
-        })
+            Ok(Self {
+                alive: true,
+                path,
+                saved: true,
+                lines: file_contents.lines().map(String::from).collect(),
+                cursor_row: 0,
+                cursor_col: 0,
+            })
+        } else {
+            Ok(Self {
+                alive: true,
+                path,
+                saved: false,
+                lines: vec![String::new()],
+                cursor_row: 0,
+                cursor_col: 0,
+            })
+        }
     }
 
     pub fn handle_key(&mut self, event: KeyEvent) {
@@ -110,7 +109,13 @@ impl TextEditor {
     }
 
     fn save(&mut self) {
-        // TODO
+        let mut file = File::create(self.path.clone()).unwrap();
+
+        for line in &self.lines {
+            writeln!(file, "{}", line).unwrap();
+        }
+
+        self.saved = true;
     }
 
     fn move_cursor(&mut self, direction: Direction) {
