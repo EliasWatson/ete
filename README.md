@@ -2,6 +2,8 @@
 
 A very basic text editor written in pure Rust.
 
+![Screenshot of the editor](/images/screenshot.webp)
+
 I wrote this for fun, so don't expect something you'll actually want to use.
 
 ## Shortcut Keys
