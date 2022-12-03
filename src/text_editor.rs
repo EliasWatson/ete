@@ -20,6 +20,7 @@ pub struct TextEditor {
     pub lines: Vec<String>,
     pub cursor_row: usize,
     pub cursor_col: usize,
+    pub cursor_col_offset: u16,
 }
 
 #[derive(Debug)]
@@ -44,6 +45,7 @@ impl TextEditor {
                 lines: file_contents.lines().map(String::from).collect(),
                 cursor_row: 0,
                 cursor_col: 0,
+                cursor_col_offset: 2,
             })
         } else {
             Ok(Self {
@@ -53,6 +55,7 @@ impl TextEditor {
                 lines: vec![String::new()],
                 cursor_row: 0,
                 cursor_col: 0,
+                cursor_col_offset: 2,
             })
         }
     }
@@ -103,21 +106,41 @@ impl TextEditor {
             // Unknown
             _ => {}
         }
+
+        self.cursor_col_offset = self.get_line_number_width() + 1;
     }
 
     pub fn render(&self, out: &mut Stdout) -> Result<(), std::io::Error> {
+        let line_number_width = self.get_line_number_width();
+
         execute!(out, cursor::Hide)?;
 
         for (row, line) in self.lines.iter().enumerate() {
             let Ok(row) = row.try_into() else { break; };
 
-            execute!(out, cursor::MoveTo(0, row), Print(line))?;
+            execute!(
+                out,
+                cursor::MoveTo(0, row),
+                SetForegroundColor(Color::Red),
+                Print(format!(
+                    "{:width$}",
+                    row + 1,
+                    width = line_number_width as usize
+                )),
+                ResetColor,
+                cursor::MoveTo(line_number_width + 1, row),
+                Print(line)
+            )?;
         }
 
         self.render_toolbar(out)?;
 
         execute!(out, cursor::Show, ResetColor)?;
         Ok(())
+    }
+
+    fn get_line_number_width(&self) -> u16 {
+        format!("{}", self.lines.len()).len() as u16
     }
 
     fn render_toolbar(&self, out: &mut Stdout) -> Result<(), std::io::Error> {

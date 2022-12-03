@@ -32,7 +32,8 @@ fn main() -> Result<()> {
         execute!(
             out,
             cursor::MoveTo(
-                text_editor.cursor_col.try_into().unwrap_or(u16::MAX),
+                text_editor.cursor_col.try_into().unwrap_or(u16::MAX)
+                    + text_editor.cursor_col_offset,
                 text_editor.cursor_row.try_into().unwrap_or(u16::MAX)
             ),
         )?;
