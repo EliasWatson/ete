@@ -28,6 +28,8 @@ pub enum Direction {
     Right,
     Down,
     Left,
+    Front,
+    Back,
 }
 
 impl TextEditor {
@@ -57,18 +59,37 @@ impl TextEditor {
 
     pub fn handle_key(&mut self, event: KeyEvent) {
         match event.code {
+            // Save
             KeyCode::Char('s') if event.modifiers.contains(KeyModifiers::CONTROL) => self.save(),
+
+            // Quit if saved
             KeyCode::Esc if self.saved => self.alive = false,
+
+            // Quit without saving
             KeyCode::Char('q') if event.modifiers.contains(KeyModifiers::CONTROL) => {
                 self.alive = false
             }
+
+            // Arrow keys
             KeyCode::Up => self.move_cursor(Direction::Up),
             KeyCode::Right => self.move_cursor(Direction::Right),
             KeyCode::Down => self.move_cursor(Direction::Down),
             KeyCode::Left => self.move_cursor(Direction::Left),
-            KeyCode::Char(c) => self.insert_char(c),
+
+            // Home & end
+            KeyCode::Home => self.move_cursor(Direction::Front),
+            KeyCode::End => self.move_cursor(Direction::Back),
+
+            // New line
             KeyCode::Enter => self.insert_new_line(),
+
+            // Erase text
             KeyCode::Backspace => self.erase_char(),
+
+            // Write text
+            KeyCode::Char(c) => self.insert_char(c),
+
+            // Unknown
             _ => {}
         }
     }
@@ -127,6 +148,8 @@ impl TextEditor {
             Direction::Right => self.cursor_col = self.cursor_col.saturating_add(1),
             Direction::Down => self.cursor_row = self.cursor_row.saturating_add(1),
             Direction::Left => self.cursor_col = self.cursor_col.saturating_sub(1),
+            Direction::Front => self.cursor_col = 0,
+            Direction::Back => self.cursor_col = self.lines[self.cursor_row].len(),
         }
 
         if self.cursor_row >= self.lines.len() {
